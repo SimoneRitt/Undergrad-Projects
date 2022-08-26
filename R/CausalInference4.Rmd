@@ -1,0 +1,401 @@
+---
+title: "Homework 4"
+author: 'sgr344: Simone Rittenhouse'
+date: "12/13/2021"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+editor_options:
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r include=FALSE}
+
+library(dplyr)
+library(tinytex)
+library(haven)
+library(estimatr)
+library(panelView)
+
+```
+
+# Question 1
+## Part a
+
+Show that the parallel trends assumption is satisfied by showing that $E[Y_{i1}(0) - Y_{i0}(0)|D_i=1] = E[Y_{i1}(0) - Y_{i0}(0)|D_i=0]$
+
+\begin{align*}
+E[Y_{i1}(0) - Y_{i0}(0)|D_i=1] & = E[(\delta_1 + u_i + \epsilon_{i1}) - (\delta_0 + u_i + \epsilon_{i0})|D_i=1] \\
+& = E[\delta_1 + u_i + \epsilon_{i1} - \delta_0 - u_i - \epsilon_{i0}|D_i=1] \\
+& = E[\delta_1|D_i=1] + E[u_i|D_i=1] + E[\epsilon_{i1}|D_i=1] - E[\delta_0|D_i=1] - E[u_i|D_i=1] - E[\epsilon_{i0}|D_i=1] \\
+& = E[\delta_1|D_i=1] + E[u_i|D_i=1] + \eta_i(1) - E[\delta_0|D_i=1] - E[u_i|D_i=1] - \eta_i(1) \\
+& = E[\delta_1|D_i=1] - E[\delta_0|D_i=1]
+\end{align*}
+
+Because $\delta_t$ doesn't depend on $D_i$, $E[\delta_t | D_i=1] = E[\delta_t | D_i=0]$. Therefore:
+
+\begin{align*}
+& = E[\delta_1|D_i=0] - E[\delta_0|D_i=0] \\
+& = E[\delta_1|D_i=0] - E[\delta_0|D_i=0] + (\eta_i(0) - \eta_i(0)) + (E[u_i|D_i=0] - E[u_i|D_i=0]) \\
+& = E[\delta_1|D_i=0] + E[u_i|D_i=0] + \eta_i(0) - E[\delta_0|D_i=0] - E[u_i|D_i=0] - \eta_i(0) \\
+& = E[\delta_1|D_i=0] + E[u_i|D_i=0] + E[\epsilon_{i1}|D_i=0] - E[\delta_0|D_i=0] - E[u_i|D_i=0] - E[\epsilon_{i0}|D_i=0] \\
+& = E[\delta_1 + u_i + \epsilon_{i1} - \delta_0 - u_i - \epsilon_{i0}|D_i=0] \\
+& = E[(\delta_1 + u_i + \epsilon_{i1}) - (\delta_0 + u_i + \epsilon_{i0})|D_i=0] \\
+& = E[Y_{i1}(0) - Y_{i0}(0)|D_i=0]
+\end{align*}
+
+$\therefore E[Y_{i1}(0) - Y_{i0}(0)|D_i=1] = E[Y_{i1}(0) - Y_{i0}(0)|D_i=0]$ and the parallel trends assumption is satisfied.
+
+## Part b
+
+Show that $E[\hat{\tau}] = \frac{1}{n} \sum_{i=1}^{n} \tau_i$
+
+\begin{align*}
+E[\hat{\tau}] & = E[\frac{1}{n_t} \sum_{i=1}^{n}(Y_{i1} - Y_{i0})D_i - \frac{1}{n_c}\sum_{i=1}^{n}(Y_{i1}-Y_{i0})(1-D_i)] \\
+& = E[\frac{1}{n_t} \sum_{i=1}^{n}(Y_{i1} - Y_{i0})D_i] - E[\frac{1}{n_c}\sum_{i=1}^{n}(Y_{i1}-Y_{i0})(1-D_i)] \\
+& = \frac{1}{n_t} \sum_{i=1}^{n}E[(Y_{i1} - Y_{i0})D_i] - \frac{1}{n_c}\sum_{i=1}^{n}E[(Y_{i1}-Y_{i0})(1-D_i)] \\
+& = \frac{1}{n_t} \sum_{i=1}^{n}E[E[(Y_{i1} - Y_{i0})D_i|D_i=1]] - \frac{1}{n_c}\sum_{i=1}^{n}E[E[(Y_{i1}-Y_{i0})(1-D_i)|D_i=0]] \text{ (by law of iterative expectation)}\\
+& = \frac{1}{n_t} \sum_{i=1}^{n}E[E[(Y_{i1} - Y_{i0})|D_i=1]D_i] - \frac{1}{n_c}\sum_{i=1}^{n}E[E[(Y_{i1}-Y_{i0})|D_i=0](1-D_i)] \\
+& = \frac{1}{n_t} \sum_{i=1}^{n}E[(Y_{i1} - Y_{i0})|D_i=1]E[D_i] - \frac{1}{n_c}\sum_{i=1}^{n}E[(Y_{i1}-Y_{i0})|D_i=0]E[1-D_i] \\
+& = \frac{1}{n_t} \sum_{i=1}^{n}E[(Y_{i1} - Y_{i0})|D_i=1]Pr(D_i=1) - \frac{1}{n_c}\sum_{i=1}^{n}E[(Y_{i1}-Y_{i0})|D_i=0](1-Pr(D_i=1)) \\
+& = \frac{1}{n_t} \sum_{i=1}^{n}E[(Y_{i1} - Y_{i0})|D_i=1]\frac{n_t}{n}- \frac{1}{n_c}\sum_{i=1}^{n}E[(Y_{i1}-Y_{i0})|D_i=0]\frac{n_c}{n} \\
+& = \frac{1}{n_t}\frac{n_t}{n} \sum_{i=1}^{n}E[(Y_{i1} - Y_{i0})|D_i=1]- \frac{1}{n_c}\frac{n_c}{n}\sum_{i=1}^{n}E[(Y_{i1}-Y_{i0})|D_i=0] \\
+& = \frac{1}{n}\sum_{i=1}^{n}E[(Y_{i1} - Y_{i0})|D_i=1]- \frac{1}{n}\sum_{i=1}^{n}E[(Y_{i1}-Y_{i0})|D_i=0] \\
+& = \frac{1}{n}\sum_{i=1}^{n}E[(Y_{i1} - Y_{i0})|D_i=1]-E[(Y_{i1}-Y_{i0})|D_i=0] \\
+& = \frac{1}{n}\sum_{i=1}^{n}E[(Y_{i1} - Y_{i0})|D_i=1] - E[(Y_{i1} - Y_{i0}) |D_i=0] \\
+& = \frac{1}{n}\sum_{i=1}^{n}E[\tau_iD_i + \delta_1 + u_i + \epsilon_{i1} - (\delta_0 + u_i + \epsilon_{i0}))|D_i=1] - E[(Y_{i1} - Y_{i0}) |D_i=0] \\
+& = \frac{1}{n}\sum_{i=1}^{n}\tau_i + \delta_1 + u_i + E[\epsilon_{i1}|D_i=1] - \delta_0 - u_i - E[\epsilon_{i0}|D_i=1] - E[(Y_{i1} - Y_{i0}) |D_i=0] \\
+& = \frac{1}{n}\sum_{i=1}^{n}\tau_i + \delta_1 + u_i + \eta_i(1) - \delta_0 - u_i - \eta_i(1) - E[(Y_{i1} - Y_{i0}) |D_i=0] \\
+& = \frac{1}{n}\sum_{i=1}^{n}\tau_i + \delta_1 - \delta_0 - E[\tau_iD_i + \delta_1 + u_i + \epsilon_{i1} - (\delta_0 + u_i + \epsilon_{i0}))|D_i=0] \\
+& = \frac{1}{n}\sum_{i=1}^{n}\tau_i + \delta_1 - \delta_0 - (\delta_1 + u_i + \eta_i(0) - \delta_0 - u_i - \eta_i(0)) \\
+& = \frac{1}{n}\sum_{i=1}^{n}\tau_i + \delta_1 - \delta_1 - \delta_0 + \delta_0 - (u_i - u_i + \eta_i(0) - \eta_i(0)) \\
+& = \frac{1}{n}\sum_{i=1}^{n}\tau_i
+\end{align*}
+
+Therefore, $\hat{\tau}$ is unbiased.
+
+## Part c
+
+Find formula for the bias of $\hat{\tau}_{t=1}$ in terms of the constants $\eta_i(d)$:
+
+\begin{align*}
+E[\hat{\tau}_{t=1}] - \frac{1}{n}\sum_{i=1}^{n} \tau_i & = E[\frac{1}{n_t}\sum_{i=1}^{n}Y_{i1}D_i - \frac{1}{n_c}\sum_{i=1}^{n}Y_{i1}(1-D_i)] - \frac{1}{n}\sum_{i=1}^{n} \tau_i \\
+& = E[\frac{1}{n_t}\sum_{i=1}^{n}Y_{i1}D_i] - E[\frac{1}{n_c}\sum_{i=1}^{n}Y_{i1}(1-D_i)]- \frac{1}{n}\sum_{i=1}^{n} \tau_i \\
+& = \frac{1}{n_t}\sum_{i=1}^{n}E[Y_{i1}D_i] - \frac{1}{n_c}\sum_{i=1}^{n}E[Y_{i1}(1-D_i)] - \frac{1}{n}\sum_{i=1}^{n} \tau_i \\
+& = \frac{1}{n_t}\sum_{i=1}^{n}E[E[Y_{i1}|D_i=1]D_i] - \frac{1}{n_c}\sum_{i=1}^{n}E[E[Y_{i1}|D_i=0](1-D_i)] - \frac{1}{n}\sum_{i=1}^{n} \tau_i \\
+& = \frac{1}{n_t}\sum_{i=1}^{n}E[Y_{i1}|D_i=1]Pr(D_i=1) - \frac{1}{n_c}\sum_{i=1}^{n}E[Y_{i1}|D_i=0](1-Pr(D_i=1)) - \frac{1}{n}\sum_{i=1}^{n} \tau_i \\
+& = \frac{1}{n_t}\sum_{i=1}^{n}E[Y_{i1}|D_i=1]\frac{n_t}{n} - \frac{1}{n_c}\sum_{i=1}^{n}E[Y_{i1}|D_i=0]\frac{n_c}{n} - \frac{1}{n}\sum_{i=1}^{n} \tau_i \\
+& = \frac{1}{n}\sum_{i=1}^{n}E[Y_{i1}|D_i=1] - \frac{1}{n}\sum_{i=1}^{n}E[Y_{i1}|D_i=0] - \frac{1}{n}\sum_{i=1}^{n} \tau_i \\
+& = \frac{1}{n}\sum_{i=1}^{n}E[Y_{i1}|D_i=1] - E[Y_{i1}|D_i=0] - \tau_i \\
+& = \frac{1}{n}\sum_{i=1}^{n}E[\tau_iD_i + \delta_1 + u_i + \epsilon_{i1}|D_i=1] - E[\tau_iD_i + \delta_1 + u_i + \epsilon_{i1}|D_i=0] - \tau_i \\
+& = \frac{1}{n}\sum_{i=1}^{n}\tau_i(1) + \delta_1 + u_i + E[\epsilon_{i1}|D_i=1] - \tau_i(0) - \delta_1 - u_i - E[\epsilon_{i1}|D_i=0] - \tau_i \\
+& = \frac{1}{n}\sum_{i=1}^{n}\tau_i + E[\epsilon_{i1}|D_i=1] - E[\epsilon_{i1}|D_i=0] - \tau_i \\
+& = \frac{1}{n}\sum_{i=1}^{n} \eta_i(1) - \eta_i(0)
+\end{align*}
+
+# Question 2
+
+Show that $E[\hat{\tau}_{Wald}^p] = E[Y_i(1) - Y_i(0)|D_i(1) > D_i(0)]$:
+
+\begin{align*}
+E[\hat{\tau}_{Wald}^p] & = E[\frac{1}{p}(\frac{1}{n_t}\sum_{i=1}^{n}Y_i Z_i - \frac{1}{n_c}\sum_{i=1}^{n} Y_i(1-Z_i))] \\
+&= \frac{1}{p}(\frac{1}{n_t}\sum_{i=1}^{n}E[Y_i Z_i] - \frac{1}{n_c}\sum_{i=1}^{n} E[Y_i(1-Z_i)])\\
+&= \frac{1}{p}(\frac{1}{n_t}\sum_{i=1}^{n}E[E[Y_i|Z_i=1]Z_i] - \frac{1}{n_c}\sum_{i=1}^{n} E[E[Y_i|Z_i=0](1-Z_i)])\\
+&= \frac{1}{p}(\frac{1}{n_t}\sum_{i=1}^{n}E[Y_i|Z_i=1]E[Z_i] - \frac{1}{n_c}\sum_{i=1}^{n} E[Y_i|Z_i=0]E[(1-Z_i)])\\
+&= \frac{1}{p}(\frac{1}{n_t}\sum_{i=1}^{n}E[Y_i|Z_i=1]Pr(Z_i=1) - \frac{1}{n_c}\sum_{i=1}^{n}E[Y_i|Z_i=0]Pr(Z_i=0))\\
+&= \frac{1}{p}(\frac{1}{n_t}\sum_{i=1}^{n}E[Y_i|Z_i=1]\frac{n_t}{n} - \frac{1}{n_c}\sum_{i=1}^{n}E[Y_i|Z_i=0]\frac{n_c}{n})\\
+&= \frac{1}{p}(\frac{1}{n}\sum_{i=1}^{n}E[Y_i|Z_i=1] - \frac{1}{n}\sum_{i=1}^{n}E[Y_i|Z_i=0])\\
+&= \frac{1}{p}(\frac{1}{n}\sum_{i=1}^{n}E[Y_i|Z_i=1] - E[Y_i|Z_i=0])\\
+&= \frac{1}{p}(\frac{1}{n}\sum_{i=1}^{n}E[Y_i|Z_i=1] - E[Y_i|Z_i=0])\\
+&= \frac{1}{p}(\frac{1}{n}\sum_{i=1}^{n}E[Y_i(1)D_i + Y_i(0)(1-D_i)|Z_i=1] - E[Y_i(1)D_i + Y_i(0)(1-D_i)|Z_i=0])\\
+&= \frac{1}{p}(\frac{1}{n}\sum_{i=1}^{n}E[Y_i(0) + (Y_i(1) - Y_i(0))D_i|Z_i=1] - E[Y_i(0) + (Y_i(1) - Y_i(0))D_i|Z_i=0])\\
+&= \frac{1}{p}(\frac{1}{n}\sum_{i=1}^{n}E[Y_i(0) + (Y_i(1) - Y_i(0))D_i(1)] - E[Y_i(0) + (Y_i(1) - Y_i(0))D_i(0)])\\
+&= \frac{1}{p}(\frac{1}{n}\sum_{i=1}^{n}E[Y_i(0) + (Y_i(1) - Y_i(0))D_i(1) - Y_i(0) - (Y_i(1) - Y_i(0))D_i(0)])\\
+&= \frac{1}{p}(\frac{1}{n}\sum_{i=1}^{n}E[(Y_i(1) - Y_i(0))(D_i(1) - D_i(0))])\\
+&= \frac{1}{p}(\frac{1}{n}\sum_{i=1}^{n}E[(Y_i(1) - Y_i(0))(D_i(1) - D_i(0))|D_i(1) = D_i(0)]Pr(D_i(1)=D_i(0)) + \\
+&E[(Y_i(1) - Y_i(0))(D_i(1) - D_i(0))|D_i(1) > D_i(0)]Pr(D_i(1) > D_i(0)) + \\
+&E[(Y_i(1) - Y_i(0))(D_i(1) - D_i(0))|D_i(1) < D_i(0)]Pr(D_i(1) < D_i(0)))\\
+&= \frac{1}{p}(\frac{1}{n}\sum_{i=1}^{n}E[(Y_i(1) - Y_i(0))(1)|D_i(1) > D_i(0)]p) \\
+&= \frac{1}{n}\sum_{i=1}^{n}E[Y_i(1) - Y_i(0)|D_i(1) > D_i(0)]\\
+&= E[Y_i(1) - Y_i(0)|D_i(1) > D_i(0)]
+\end{align*}
+
+Therefore, $\hat{\tau}_{Wald}^p$ is unbiased for the LATE.
+
+# Question 3
+
+```{r echo=TRUE}
+
+# loading the data set
+OHIE <- read_dta("/Users/simonerittenhouse/Desktop/Causal Inference/OHIE.dta")
+
+```
+
+## Part a
+
+```{r echo=TRUE}
+
+# outcome: elevated blood pressure
+itt_reg1 <- lm_robust(tab2bp_hyper ~ treatment, data=OHIE)
+itt_reg1
+
+# outcome: depression
+itt_reg2 <- lm_robust(tab2phqtot_high ~ treatment, data=OHIE)
+itt_reg2
+
+# outcome: catastrophic medical expenditure
+itt_reg3 <- lm_robust(tab4_catastrophic_exp_inp ~ treatment, data=OHIE)
+itt_reg3
+
+# outcome: whether participants had their health care needs met
+itt_reg4 <- lm_robust(tab5_needmet_med_inp ~ treatment, data=OHIE)
+itt_reg4
+
+```
+**Blood Pressure:**
+
+ITT = -0.001600248 
+
+CI = [-0.01457788, 0.01137739]  
+
+Because this confidence interval contains 0, the ITT is not significant - meaning that being selected for the lottery did not have a significant effect on whether or not a participant's blood pressure was elevated.
+
+**Depression:**
+
+ITT = -0.03493247
+
+CI = [-0.05101889, -0.01884605]
+
+Because this confidence interval doesn't contain 0, the ITT is significant - meaning that being selected for the lottery did have a significant negative effect on positive screening results for depression.
+
+**Catastrophic Medical Expenditure:**
+
+ITT = -0.01526897
+
+CI = [-0.02287326, -0.007664678]
+
+Because this confidence interval doesn't contain 0, the ITT is significant - meaning that being selected for the lottery did have a significant negative effect on catastrophic medical expenditure.
+
+**Health Needs Met:**
+
+ITT = 0.03445945
+
+CI = [0.01731626, 0.05160263]
+
+Because this confidence interval doesn't contain 0, the ITT is significant - meaning that being selected for the lottery did have a significant positive effect on whether a participant's health needs were met.
+
+## Part b
+
+```{r echo=TRUE}
+
+# outcome: elevated blood pressure
+itt_reg1 <- lm_robust(tab2bp_hyper ~ ohp_all_ever_admin, data=OHIE)
+itt_reg1
+
+# outcome: depression
+itt_reg2 <- lm_robust(tab2phqtot_high ~ ohp_all_ever_admin, data=OHIE)
+itt_reg2
+
+# outcome: catastrophic medical expenditure
+itt_reg3 <- lm_robust(tab4_catastrophic_exp_inp ~ ohp_all_ever_admin, data=OHIE)
+itt_reg3
+
+# outcome: whether participants had their health care needs met
+itt_reg4 <- lm_robust(tab5_needmet_med_inp ~ ohp_all_ever_admin, data=OHIE)
+itt_reg4
+
+```
+**Blood Pressure:**
+
+Estimate = -0.01805395
+
+CI = [-0.03209353, -0.004014375]  
+
+Because this confidence interval does not contain 0, the estimate is significant - meaning that being enrolled in Medicaid significantly lowers blood pressure.
+
+**Depression:**
+
+Estimate = 0.04931657
+
+CI = [0.03121041, 0.06742274]
+
+Because this confidence interval does not contain 0, the estimate is significant - meaning that being enrolled in Medicaid significantly increases depression.
+
+**Catastrophic Medical Expenditure:**
+
+Estimate = -0.01072603
+
+CI = [-0.01866845, -0.002783606]
+
+Because this confidence interval doesn't contain 0, the estimate is significant - meaning that being enrolled in Medicaid has a significant negative effect on catastrophic medical expenditure.
+
+**Health Needs Met:**
+
+Estimate = 0.06126608
+
+CI = [0.04267963, 0.07985253]
+
+Because this confidence interval doesn't contain 0, the estimate is significant - meaning that being enrolled in Medicaid did have a significant positive effect on whether a participant's health needs were met.
+
+These might be biased estimates for the causal effect of Medicaid enrollment because randomization might be broken if there are non-compliers. For example, ideally those that are enrolled in Medicaid would be randomly assigned for their enrollment using the lottery. However, there may be participants that were selected by lottery to enroll in Medicaid but chose not to. Similarly, there may be people that choose to enroll in Medicaid without being selected by the lottery. In both of these cases, the treatment and control groups are no longer randomly assigned since participants have self-selected into one of the groups. Because the treatment is no longer randomly assigned, our estimates may be biased.
+
+## Part c
+
+```{r echo=TRUE}
+
+# creating variable for those that were treated and complied
+OHIE <- OHIE %>% mutate(participate = as.integer(treatment ==1 & ohp_all_ever_admin == 1))
+# creating variable for those that were control and complied
+OHIE <- OHIE %>% mutate(no_participate = as.integer(treatment ==0 & ohp_all_ever_admin == 0))
+
+# compliance rate for those that were selected
+comply_treat <- sum(OHIE$participate ==1)/sum(OHIE$treatment ==1)
+comply_treat
+
+# compliance rate for those that were not selected
+comply_control <- sum(OHIE$no_participate == 1)/sum(OHIE$treatment ==0)
+comply_control
+
+# first-stage regression
+first_stage_reg <- lm_robust(ohp_all_ever_admin ~ treatment, data=OHIE)
+first_stage_reg
+
+OHIE$predictOhp <- predict(first_stage_reg, newdata=OHIE)
+
+```
+
+Of those that were assigned to enroll in medicaid, 38.18% of participants complied and enrolled in medicaid. Of those that were not assigned to enroll in medicaid (i.e. assigned to the control group), 85.45% of participants complied and did not enroll in medicaid.
+
+Because there is a significant relationship between the instrument and people that actually enrolled in medicaid after being selected in the lottery, the variable "treatment" is not a weak instrument.
+
+## Part d
+
+```{r echo=TRUE}
+
+# outcome: elevated blood pressure
+second_stage1 <- lm_robust(tab2bp_hyper ~ predictOhp, data=OHIE) 
+second_stage1
+
+# outcome: depression
+second_stage2 <- lm_robust(tab2phqtot_high ~ predictOhp, data=OHIE) 
+second_stage2
+
+# outcome: catastrophic medical expenditure
+second_stage3 <- lm_robust(tab4_catastrophic_exp_inp ~ predictOhp, data=OHIE) 
+second_stage3
+
+# outcome: whether participants had their health care needs met
+second_stage4 <- lm_robust(tab5_needmet_med_inp ~ predictOhp, data=OHIE) 
+second_stage4
+
+```
+**Blood Pressure:**
+
+LATE = -0.006769779
+
+CI = [-0.06167109, 0.04813153]  
+
+Because this confidence interval contains 0, the estimate is not significant - meaning that enrolling in Medicaid after being selected through the lottery did not have a significant effect on blood pressure elevation.
+
+This negative effect is less extreme than our naive estimate in Part B (-0.0067 > -0.018), meaning that enrollment through the lottery lowered blood pressure elevation less than enrolling in medicaid through both the lottery and other means. Our naive estimate was also statistically significant, unlike the instrumental variables estimate.
+
+**Depression:**
+
+LATE = -0.1477803
+
+CI = [-0.2158332, -0.07972737]
+
+Because this confidence interval does not contain 0, the estimate is significant - meaning that enrolling in Medicaid after being selected through the lottery significantly decreased depression.
+
+Our naive estimate in Part B was also significant but was a positive effect (0.049), showing that depression increased after enrollment. Here, we have a significant effect in the opposite direction.
+
+**Catastrophic Medical Expenditure:**
+
+LATE = -0.06459471
+
+CI = [-0.09676434, -0.03242509]
+
+Because this confidence interval doesn't contain 0, the estimate is significant - meaning that enrolling in Medicaid after being selected through the lottery has a significant negative effect on catastrophic medical expenditure.
+
+The naive estimate in Part B also had a significant negative effect; however, our effect here is more extreme (-0.064 < -0.010).
+
+**Health Needs Met:**
+
+LATE =  0.1457792
+
+CI = [0.0732557, 0.2183027]
+
+Because this confidence interval doesn't contain 0, the estimate is significant - meaning enrolling in Medicaid after being selected through the lottery did have a significant positive effect on whether a participant's health needs were met.
+
+The naive estimate in Part B also had a significant positive effect; however, our effect here is more extreme (0.14 > 0.06).
+
+## Part e (Bonus)
+
+In order to interpret the estimates from Part D as an Average Treatment Effect for the entire sample, we need to assume that everyone in the sample complied with their treatment assignment. This would mean that the potential outcome of $Y(1,1)$ would simply equal $Y(1)$ because the instrument (treatment assignment) would be the only thing determining if units actually took the treatment or not. In this case, the instrumental variable of treatment assignment would equal the actual treatment of the units, so the instrumental variable estimate would be an estimate of the ATE.
+
+Additionally, because $\hat{\tau}_{IV} \rightarrow \tau + \frac{Cov(Z_i,U_i)}{Cov(Z_i,D_i)}$, we would not only need compliance (i.e. $Z_i = D_i$ and there is a correlation of 1 between them), but we would also need to make sure $Z_i$ is uncorrelated with unobserved confounder $U_i$. That way, $\frac{Cov(Z_i,U_i)}{Cov(Z_i,D_i)}$ would equal 0 and the LATE would equal the ATE.
+
+# Question 4
+
+```{r echo=TRUE}
+
+# loading the data set
+bases <- read_dta("/Users/simonerittenhouse/Desktop/Causal Inference/bases_replication_final.dta")
+
+```
+
+## Part a
+
+```{r echo=TRUE}
+
+panelView(as.data.frame(bases), 
+          formula = paratt ~ bases6, 
+          index=c("municipality", "year"), 
+          xlab="Year", ylab="Municipality", 
+          by.timing=T)
+panelView(as.data.frame(bases), 
+          formula = paratt ~ lrmilnar_col, 
+          index=c("municipality", "year"), 
+          xlab="Year", ylab="Municipality", 
+          by.timing=T)
+
+grouped_df <- bases %>% group_by(municipality) 
+
+output <- grouped_df %>% group_by(year) %>% summarize(bases = sum(bases6),
+                                   milAid = mean(lrmilnar_col),
+                                   N_municipality = n(),
+                                   N_control = N_municipality - bases,
+                                   .groups="keep")
+print(output)
+
+```
+There are 904 units in the control group (municipalities that did not have a military base in them). The bases variable is a unit-constant factor, meaning that municipalities continued to have - or not have - military bases within the time frame studied. Conversely, the logged military aid variable changes from year to year across municipalities; however, it does not change across units within a given year. 
+
+The authors seem to be assuming that the amount of military aid distributed is the same regardless of whether or not a municipality has a military base or not. This means that in a given year, military aid is constant and the only difference between units is if the municipality has a military base or not. Conversely, for a given unit, whether or not the municipality has a military base is constant while the amount of military aid changes over time.
+
+## Part b
+
+The authors are assuming that the outcome of paramilitary attacks is linear. Additionally, because they included logged population as a covariate, they assume that the number of paramilitary attacks depends on a municipality's population. Lastly, they assume that the number of paramilitary attacks will vary both from unit to unit and from year to year - which is why time periods and units are included as fixed effects in the model.
+
+## Part c
+
+```{r echo=TRUE}
+
+lm_robust(paratt ~ bases6xlrmilnar_col + lnnewpop, 
+          data=bases,  
+          fixed_effects = ~ as.factor(municipality) + as.factor(year), 
+          cluster=municipality, 
+          se_type='CR0')
+
+```
+
+Estimate: 0.1503116
+
+CI = [0.03239170, 0.2682315]
+
+Because our confidence interval does not contain 0, our estimate is statistically significant - meaning that having military a base and receiving U.S. military aid significant increased the number of paramilitary attacks experienced within a municipality.

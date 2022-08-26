@@ -1,0 +1,295 @@
+---
+title: "Homework 1"
+author: 'sgr344: Simone Rittenhouse'
+date: "9/29/2021"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+editor_options:
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r include=FALSE}
+
+library(dplyr)
+library(magrittr)
+library(readxl)
+library(tinytex)
+
+```
+
+# Problem 1
+## Part a
+
+The Average Treatment Effect on the Treated is the average of the difference between potential outcomes given that treatment was assigned to all units. This means that we can find the effect of treatment (i.e. the difference between $Y_i(1)$ and $Y_i(0)$) for all the units that received treatment. It is different from the Average Treatment Effect, because that looks at the difference in potential outcomes between treatment and control for our entire sample. We can see that the ATT is a subset of the sample (specifically, the subset of all units that received treatment) by noting that it is a conditional expectation: $\tau^t = E[Y_i(1) - Y_i(0)|D_i = 1]$.
+
+## Part b
+
+Show that $\tau^t = E[Y_i(1) - Y_i(0)|D_i = 1] = E[Y_i|D_i = 1] - E[Y_i|D_i = 0]$
+
+\begin{align*}
+\tau^t & = E[Y_i(1) - Y_i(0)|D_i = 1] \\
+& = E[Y_i(1)|D_i = 1] - E[Y_i(0)|D_i = 1] \\
+\\
+&\text{Because } Y_i(0)\perp \!\!\! \perp D_i \text{, } E[Y_i(0)|D_i = 1] = E[Y_i(0)|D_i = 0] \\
+\\
+\therefore \tau^t & = E[Y_i(1)|D_i = 1] - E[Y_i(0)|D_i = 0] \\
+\\
+&\text{By consistency, given } D_i = 1 \text{: } Y_i = Y_i(1)(1) + Y_i(0)(1-1) = Y_i(1) \\
+&\text{Also, given } D_i = 0 \text{: } Y_i = Y_i(1)(0) + Y_i(0)(1-0) = Y_i(0) \\
+&\therefore E[Y_i(1)|D_i = 1] = E[Y_i|D_i = 1] \text{ and } E[Y_i(0)|D_i = 0] = E[Y_i|D_i = 0] \\
+\\
+\therefore \tau^t & = E[Y_i|D_i = 1] - E[Y_i|D_i = 0].
+\end{align*}
+
+Because $\tau^t = E[Y_i|D_i = 1] - E[Y_i|D_i = 0]$, the ATT is identified.
+
+## Part c
+
+Under the assumptions of Part B:
+
+\begin{align*}
+\tau - \tau^t & = E[Y_i(1) - Y_i(0)] - E[Y_i(1) - Y_i(0)|D_i = 1] \\
+& = E[Y_i(1)] - E[Y_i(0)] - (E[Y_i(1)|D_i = 1] - E[Y_i(0)|D_i = 1]) \\
+& = E[Y_i(1)] - E[Y_i(0)] - E[Y_i(1)|D_i = 1] + E[Y_i(0)|D_i = 1] \\
+& = E[Y_i(1)] - E[Y_i(0)] - E[Y_i(1)|D_i = 1] + E[Y_i(0)] && \text{ (because } Y_i(0) \perp\!\!\!\perp D_i \text{, } E[Y_i(0)|D_i = 1] = E[Y_i(0)] \text{)} \\
+& = E[Y_i(1)] - E[Y_i(1)|D_i = 1]
+\end{align*}
+
+Additionally, we would need $Y_i(1)\perp\!\!\!\perp D_i$ for the difference to equal 0. In this case, $E[Y_i(1)|D_i = 1] = E[Y_i(1)]$. This assumption is enough because if both the control and treatment outcome are independent from the treatment assignment, then the effect of the treatment should be the same regardless of whether we examine only the group assigned treatment or the sample as a whole.
+
+# Problem 2
+## Part a
+
+1. $D_i$ follows a Bernoulli distribution because it is the treatment assignment for a given unit. For each unit, the probability of being assigned treatment is p, and the probability of not being assigned treatment is (1-p).
+
+2. $E[N_t]$ is the average of the number of treated units, or how many treated units we should expect if we assign treatment with probability p. Because $N_t = \sum_{i=1}^{n}D_i$, it follows a binomial distribution. Therefore, the expected value of $N_t$ is np.
+
+3. $Var[N_t]$ is the variance of the number of treated units. This shows the spread we can expect in the number of treated units - assuming $N_t$ is a random variable that will not take a constant value. It also helps us quantify our uncertainty around how many treated units we can expect on average. Again, because $N_t$ follows a binomial distribution, the variance will be $np(1-p)$.
+
+4. If we want the expected number of treated units in the Bernoulli trial to be the same as the number of treated units in a completely randomized experiment with $n_t$ treated units, the value of p should be $\frac{n_t}{n}$. This is because we would want the probability of each unit being treated to be selected uniformly and at random from the sample - meaning each unit would have the probability of $n_t$ divided by the total sample size n.
+
+## Part b
+
+Show that $E[\hat{\tau}_{IPW}] = \tau$:
+
+\begin{align*}
+E[\hat{\tau}_{IPW}] & = E[\frac{1}{n}\sum_{i=1}^{n} \left(Y_i\frac{D_i}{p} - Y_i\frac{1-D_i}{1-p}\right)] \\
+& = \frac{1}{n}\sum_{i=1}^{n} E[Y_i\frac{D_i}{p} - Y_i\frac{1-D_i}{1-p}] \\
+& = \frac{1}{n}\sum_{i=1}^{n} \left(E[Y_i\frac{D_i}{p}] - E[Y_i\frac{1-D_i}{1-p}]\right) \\
+& = \frac{1}{n}\sum_{i=1}^{n} \left(\frac{1}{p}E[Y_i D_i] - \frac{1}{1-p}E[Y_i \left(1-D_i\right)]\right) && \text{(because p is a constant)}\\
+& = \frac{1}{n}\sum_{i=1}^{n} \left(\frac{1}{p}E[E[Y_iD_i|D_i=1]] - \frac{1}{1-p}E[E[Y_i\left(1-D_i\right)|D_i=0]]\right) && \text{(by law of iterative expectation)}\\
+& = \frac{1}{n}\sum_{i=1}^{n} \left(\frac{1}{p}E[E[Y_i|D_i=1]D_i] - \frac{1}{1-p}E[E[Y_i|D_i=0]\left(1-D_i\right)]\right) \\
+& = \frac{1}{n}\sum_{i=1}^{n} \left(\frac{1}{p}E[E[Y_i(1)|D_i=1]D_i] - \frac{1}{1-p}E[E[Y_i(0)|D_i=0]\left(1-D_i\right)]\right) && \text{(by consistency)} \\
+& = \frac{1}{n}\sum_{i=1}^{n} \left(\frac{1}{p}E[E[Y_i(1)]D_i] - \frac{1}{1-p}E[E[Y_i(0)]\left(1-D_i\right)]\right) && \text{(by ignorability)} \\
+& = \frac{1}{n}\sum_{i=1}^{n} \left(\frac{1}{p}E[Y_i(1)]E[D_i] - \frac{1}{1-p}E[Y_i(0)]E[1-D_i]\right) \\
+& = \frac{1}{n}\sum_{i=1}^{n} \left(\frac{1}{p}E[Y_i(1)]E[D_i] - \frac{1}{1-p}E[Y_i(0)]\left(E[1]-E[D_i]\right)\right) \\
+& = \frac{1}{n}\sum_{i=1}^{n} \left(\frac{1}{p}E[Y_i(1)]E[D_i] - \frac{1}{1-p}E[Y_i(0)]\left(1-E[D_i]\right)\right) \\
+& = \frac{1}{n}\sum_{i=1}^{n} \left(\frac{1}{p}E[Y_i(1)]Pr(D_i = 1) - \frac{1}{1-p}E[Y_i(0)]\left(1-Pr(D_i = 1)\right)\right) \\
+& = \frac{1}{n}\sum_{i=1}^{n} \left(\frac{1}{p}E[Y_i(1)]p - \frac{1}{1-p}E[Y_i(0)]\left(1-p\right)\right) \\
+& = \frac{1}{n}\sum_{i=1}^{n} \left(\frac{p}{p}E[Y_i(1)] - \frac{1-p}{1-p}E[Y_i(0)]\right) \\
+& = \frac{1}{n}\sum_{i=1}^{n} \left(E[Y_i(1)] - E[Y_i(0)]\right) \\
+& = \tau \\
+& \therefore \hat{\tau}_{IPW} \text{ is unbiased.}
+\end{align*}
+
+## Part c
+
+Show that in a completely randomized experiment, $\hat{\tau}_{IPW} = \frac{1}{n_t}\sum_{i=1}^{n}Y_iD_i - \frac{1}{n_c}\sum_{i=1}^{n}Y_i(1 - D_i)$.
+
+\begin{align*}
+\hat{\tau}_{IPW} & = \frac{1}{n}\sum_{i=1}^{n} \left(Y_i\frac{D_i}{p} - Y_i\frac{1-D_i}{1-p}\right) \\
+& = \frac{1}{n}\sum_{i=1}^{n} Y_i\frac{D_i}{p} - \frac{1}{n}\sum_{i=1}^{n} Y_i\frac{1-D_i}{1-p} \\
+& = \frac{1}{n}\sum_{i=1}^{n} Y_iD_i\frac{1}{p} - \frac{1}{n}\sum_{i=1}^{n} Y_i(1-D_i)\frac{1}{1-p} \\
+\\
+& \text{In a completely randomized experiment with } n_t \text{ treated, } p = \frac{n_t}{n} \text{ and } 1 - p = \frac{n_c}{n} \\
+& \frac{1}{p} = \frac{n}{n_t} \text{ and } \frac{1}{1-p} = \frac{n}{n_c}\\
+\\
+\therefore \hat{\tau}_{IPW} & = \frac{1}{n}\sum_{i=1}^{n} Y_iD_i\frac{n}{n_t} - \frac{1}{n}\sum_{i=1}^{n} Y_i(1-D_i)\frac{n}{n_c} \\
+& = \frac{1}{n}\frac{n}{n_t}\sum_{i=1}^{n} Y_iD_i - \frac{1}{n}\frac{n}{n_c}\sum_{i=1}^{n} Y_i(1-D_i) \\
+& = \frac{1}{n_t}\sum_{i=1}^{n} Y_iD_i - \frac{1}{n_c}\sum_{i=1}^{n} Y_i(1-D_i) \\
+\end{align*}
+
+So, in a completely randomized experiment $\hat{\tau}_{IPW}$ equals the Neyman "difference in means" estimator.
+
+# Problem 3
+
+```{r echo=TRUE}
+
+# loading the data set
+gotv <- read_excel("/Users/simonerittenhouse/Desktop/Causal Inference/gotv_individual.xlsx")
+
+```
+
+## Part a. Data Preparation
+
+1.
+```{r echo=TRUE}
+
+gotv <- gotv %>% mutate(sex = case_when(sex == "female" ~ 1.,
+                               sex == "male" ~ 0.,
+                               TRUE ~ NA_real_))
+
+```
+
+2.
+```{r echo=TRUE}
+
+gotv$yob <- 2006 - gotv$yob
+gotv <- gotv %>% rename("age" = "yob")
+
+```
+
+3.
+
+```{r echo=TRUE}
+
+# grouping by household and preserving treatment
+gotv_hh <- gotv %>% group_by(hh_id, treatment) 
+# getting means of each individual-level variable
+gotv_hh <- gotv_hh %>% summarise_if(is.numeric, mean) 
+
+```
+
+4. The authors of this paper analyzed households instead of the individual because treatment was administered to each household, so individuals within the household are not independent of one another. For example, even though a letter was addressed to a specific household member, it's possible that other individuals within the household read the letter or were given the treatment indirectly by word-of-mouth from the household member that received the letter. We therefore can't assume that units are independent if we analyze at the individual level, which is why it makes much more sense to analyze at the household level.
+
+## Part b. Validate Randomization
+
+```{r echo=TRUE}
+
+gotv_hh %>% group_by(treatment) %>% summarize(p2000 = mean(p2000),
+                                            g2000 = mean(g2000),
+                                            p2002 = mean(p2002),
+                                            g2002 = mean(g2002),
+                                            p2004 = mean(p2004),
+                                            hh.size = mean(hh_size),
+                                            sex = mean(sex),
+                                            age = mean(age),
+                                            .groups="keep")
+
+```
+
+The means are extremely similar across groups for all variables analyzed. This does not necessarily imply randomization because we could select a sample and assign treatment in such a way as to achieve this outcome without randomization. However, assuming we sampled at random from the population, we would be unlikely to find similar means on several outcome variables across treatment groups without randomization in treatment assignment. So, comparing means in this way helps us verify that treatment was assigned randomly - i.e. in such a way that none of these other variables (like age or household size) had an effect on which units received which treatment. The result of this is that ignorability is upheld, meaning that, since treatment assignment was randomized, the potential outcomes of each group are independent from how treatment was assigned.
+
+## Part c. ATE
+
+```{r echo=TRUE}
+
+# ATE estimate between Control and Civic Duty
+
+civicDuty_effect <- mean(gotv_hh$voted[gotv_hh$treatment == "Civic Duty"]) -
+                    mean(gotv_hh$voted[gotv_hh$treatment == "Control"])
+
+print(civicDuty_effect)
+
+# ATE estimate between Control and Hawthorne
+
+hawthorne_effect <- mean(gotv_hh$voted[gotv_hh$treatment == "Hawthorne"]) -
+                    mean(gotv_hh$voted[gotv_hh$treatment == "Control"])
+
+print(hawthorne_effect)
+
+# ATE estimate between Control and Neighbors
+
+neighbors_effect <- mean(gotv_hh$voted[gotv_hh$treatment == "Neighbors"]) -
+                    mean(gotv_hh$voted[gotv_hh$treatment == "Control"])
+
+print(neighbors_effect)
+
+# ATE estimate between Control and Self
+
+self_effect <- mean(gotv_hh$voted[gotv_hh$treatment == "Self"]) -
+                    mean(gotv_hh$voted[gotv_hh$treatment == "Control"])
+
+print(self_effect)
+
+```
+
+$\hat{\tau}_{Civic\:Duty} = 0.02062$
+
+$\hat{\tau}_{Hawthorne}= 0.02749$
+
+$\hat{\tau}_{Neighbors} = 0.08479$
+
+$\hat{\tau}_{Self} = 0.05256$
+
+The two assumptions in this experiment that allow us to compute the ATE are ignorability and consistency. Ignorability means that treatment assignment ($D_i$) is independent of potential outcomes $Y_i(1)$ and $Y_i(0)$ and therefore need not be taken into account when calculating ATE. Consistency means that our observed treatment ($Y_i$) is equal to the potential outcome of either treatment or control depending on whether or not unit i received treatment. This allows us to use our observed outcomes to calculate the ATE: $\tau = E[Y_i(1)] - E[Y_i(0)]$.
+
+## Part d. Variance and Average HP testing
+
+```{r echo=TRUE}
+
+# Neyman Variance Estimator
+var_ate_hat <- var(gotv_hh$voted[gotv_hh$treatment == "Neighbors"])/
+               sum(gotv_hh$treatment == "Neighbors") +
+               var(gotv_hh$voted[gotv_hh$treatment == "Control"])/
+               sum(gotv_hh$treatment == "Control")
+
+print(var_ate_hat)
+
+# Standard Error
+se <- sqrt(var_ate_hat)
+
+# Z-test statistic
+z_stat <- (neighbors_effect - 0)/se
+print(z_stat)
+
+# two-sided p value
+p_value <- 2*pnorm(-abs(z_stat))
+print(p_value)
+
+```
+
+$\hat{Var[\hat{\tau}]} = 1.156e-05$
+
+$Z_n = 24.93$ 
+
+The p-value for this test is 3.639e-137; therefore, we reject the null hypothesis of no treatment effect and conclude that the "neighbors" treatment had an effect on household voting behavior.
+
+## Part e. Randomization Inference
+
+```{r echo=TRUE}
+
+# simulating the value of Zn for N = 1000 iterations
+gotv_hh2 <- gotv_hh %>% filter(treatment == "Neighbors" | treatment == "Control")
+
+set.seed(10003)
+Niter <- 1000
+zscores <- rep(NA, Niter)
+for(i in 1:Niter){
+  gotv_hh2$treatmentPermute <- sample(gotv_hh2$treatment)
+  null_avg_treated <- mean(gotv_hh2$voted[gotv_hh2$treatmentPermute == "Neighbors"])
+  null_avg_control <- mean(gotv_hh2$voted[gotv_hh2$treatmentPermute == "Control"])
+  # getting estimated treatment effect
+  ate <- null_avg_treated - null_avg_control
+  # getting sample variance
+  var_hat <-  var(gotv_hh2$voted[gotv_hh2$treatmentPermute == "Neighbors"])/
+               sum(gotv_hh2$treatmentPermute == "Neighbors")+
+               var(gotv_hh2$voted[gotv_hh2$treatmentPermute == "Control"])/
+               sum(gotv_hh2$treatmentPermute == "Control")
+  # getting standard error
+  stand_err <- sqrt(var_hat)
+  # computing Z score under sharp null
+  zscores[i] <- (ate - 0)/stand_err
+}
+
+# plotting a histogram
+hist(zscores, xlim = c(-5, 28), xlab="Z-scores under sharp null", ylab="Frequency", 
+     main="Null Distribution and Observed Z-score")
+abline(v=z_stat, col="red", lty=2, lwd=2)
+
+# getting a two-sided p-value
+p_value <- mean(abs(zscores) > abs(z_stat))
+print(p_value)
+
+```
+The two-sided p-value for the test is 0.
+
+## Part f. Compare hypothesis tests
+
+For this case, the p-values are extremely close. However, the p-value in part e is smaller than that obtained in part d (0 < 3.64e-137). Both are very close because, due to the central limit theorem, both the null distribution constructed through randomization inference in part e and the null distribution used in part d approximate a standard normal distribution. However, the p-value in part e is smaller than that in part d because part e's null distribution is discrete - made up of the frequencies of z-scores obtained from the simulation. For 1000 iterations, my observed z-score fell entirely outside of the simulated null distribution - giving me a p-value of 0. In part d, I obtained a p-value greater than 0 because the underlying null distribution is continuous and goes between negative and positive infinity, meaning that there is always some probability of observing a value equal to or more extreme than your observed Z-score. This means your p-value will always be greater than 0.

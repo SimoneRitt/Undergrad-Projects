@@ -1,0 +1,452 @@
+---
+title: "Homework 2"
+author: 'sgr344: Simone Rittenhouse'
+date: "11/9/2021"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+editor_options:
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r include=FALSE}
+
+library(dplyr)
+library(magrittr)
+library(readxl)
+library(tinytex)
+
+```
+
+# Problem 1
+## Part a
+
+Show that $\tau = E[Y_i(1) - Y_i(0)]$ is identified for a stratified experiment in which treatment for each stratum is assigned via block-randomization.
+
+\begin{align*}
+\tau & = E[Y_i(1) - Y_i(0)] \\
+& = E[E[Y_i(1) - Y_i(0)|G_i=g]] && \text{(by the law of iterative expectations)} \\
+& = E[E[Y_i(1)|G_i=g] - E[Y_i(0)|G_i=g]]
+\end{align*}
+
+Assuming ignorability holds conditionally within strata since treatment is randomized within each group (i.e. $Y_i(d)\perp\!\!\!\perp D_i|G_i=g$): 
+
+\begin{align*}
+& = E[E[Y_i(1)|D_i=1, G_i=g] - E[Y_i(0)|D_i=0, G_i=g]] \\
+& = E[E[Y_i|D_i=1, G_i=g] - E[Y_i|D_i=0, G_i=g]] && \text{(by consistency)}
+\end{align*}
+
+Because our result is written in terms of only observed values, $\tau$ is identified.
+
+## Part b
+
+Show that $E[\hat{\tau}] = \tau$
+
+(Intuition: $\hat{\tau} = E[\hat{\tau}(g)] \therefore E[\hat{\tau}] = E[E[\hat{\tau}(g)]] = E[\tau(g)] = \tau$ since $E[\hat{\tau}(g)] = \tau(g)$)
+
+Applying this logic:
+\begin{align*}
+E[\hat{\tau}] &= E[\sum_{g=1}^{G} \hat{\tau}(g) \frac{N_g}{N}] \\
+&= \sum_{g=1}^{G}E[\hat{\tau}(g) \frac{N_g}{N}] \\
+&= \sum_{g=1}^{G}E[\hat{\tau}(g)]\frac{N_g}{N}
+\end{align*}
+
+Substituting the formula for $\hat{\tau}(g)$:
+
+\begin{align*}
+&= \sum_{g=1}^{G}E[\frac{1}{n_{t,g}}\sum_{i=1}^{n}Y_iD_i{1}(i\in S_g) - \frac{1}{n_{c,g}}\sum_{i=1}^{n}Y_i(1-D_i){1}(i\in S_g)]\frac{N_g}{N}\\
+&= \sum_{g=1}^{G}E[\frac{1}{n_{t,g}}\sum_{i\in S_g}Y_iD_i - \frac{1}{n_{c,g}}\sum_{i\in S_g}Y_i(1-D_i)]\frac{N_g}{N}\\
+&= \sum_{g=1}^{G}\left(\frac{1}{n_{t,g}}\sum_{i\in S_g}E[Y_iD_i] - \frac{1}{n_{c,g}}\sum_{i\in S_g}E[Y_i(1-D_i)]\right)\frac{N_g}{N}
+\end{align*}
+
+By the law of iterative expectation:
+
+\begin{align*}
+&= \sum_{g=1}^{G}\left(\frac{1}{n_{t,g}}\sum_{i\in S_g}E[E[Y_iD_i|D_i=1, G_i=g]] - \frac{1}{n_{c,g}}\sum_{i\in S_g}E[E[Y_i(1-D_i)|D_i=0, G_i=g]]\right)\frac{N_g}{N}\\
+&= \sum_{g=1}^{G}\left(\frac{1}{n_{t,g}}\sum_{i\in S_g}E[E[Y_i|D_i=1, G_i=g]D_i|G_i=g] - \frac{1}{n_{c,g}}\sum_{i\in S_g}E[E[Y_i|D_i=0, G_i=g](1-D_i)|G_i=g]\right)\frac{N_g}{N}\\
+&= \sum_{g=1}^{G}\left(\frac{1}{n_{t,g}}\sum_{i\in S_g}E[Y_i|D_i=1, G_i=g]E[D_i|G_i=g] - \frac{1}{n_{c,g}}\sum_{i\in S_g}E[Y_i|D_i=0, G_i=g]E[(1-D_i)|G_i=g]\right)\frac{N_g}{N}\\
+&= \sum_{g=1}^{G}\left(\frac{1}{n_{t,g}}\sum_{i\in S_g}E[Y_i|D_i=1, G_i=g]Pr(D_i=1|G_i=g) - \frac{1}{n_{c,g}}\sum_{i\in S_g}E[Y_i|D_i=0, G_i=g]Pr(D_i=0|G_i=g)\right)\frac{N_g}{N}
+\end{align*}
+
+Because $Pr(D_i=1|G_i=g) = \frac{n_{t,g}}{N_g}$ and $Pr(D_i=0|G_i=g) = \frac{n_{c,g}}{N_g}$:
+
+\begin{align*}
+&= \sum_{g=1}^{G}\left(\frac{1}{n_{t,g}}\sum_{i\in S_g}E[Y_i|D_i=1, G_i=g]\frac{n_{t,g}}{N_g} - \frac{1}{n_{c,g}}\sum_{i\in S_g}E[Y_i|D_i=0, G_i=g]\frac{n_{c,g}}{N_g}\right)\frac{N_g}{N}\\
+&= \sum_{g=1}^{G}\frac{1}{N_g}\left(\sum_{i\in S_g}E[Y_i|D_i=1, G_i=g] - \sum_{i\in S_g}E[Y_i|D_i=0, G_i=g]\right)\frac{N_g}{N}\\
+&= \sum_{g=1}^{G}\frac{1}{N}\left(\sum_{i\in S_g}E[Y_i|D_i=1, G_i=g] - \sum_{i\in S_g}E[Y_i|D_i=0, G_i=g]\right)
+\end{align*}
+
+By consistency:
+
+\begin{align*}
+&= \sum_{g=1}^{G}\frac{1}{N}\left(\sum_{i\in S_g}E[Y_i(1)|D_i=1, G_i=g] - \sum_{i\in S_g}E[Y_i(0)|D_i=0, G_i=g]\right)
+\end{align*}
+
+By conditional ignorability:
+
+\begin{align*}
+&= \sum_{g=1}^{G}\frac{1}{N}\left(\sum_{i\in S_g}E[Y_i(1)|G_i=g] - \sum_{i\in S_g}E[Y_i(0)|G_i=g]\right)
+\end{align*}
+
+Because now $E[Y_i(1)|G_i=g]$ and $E[Y_i(0)|G_i=g]$ are independent of $D_i$, the sum of their averages over $i\in S_g$ will be equal to their average over the group times the number of total units in $S_g$. Therefore,
+
+\begin{align*}
+&= \sum_{g=1}^{G}\frac{1}{N}\left(N_gE[Y_i(1)|G_i=g] - N_gE[Y_i(0)|G_i=g]\right)\\
+&= \sum_{g=1}^{G}\frac{N_g}{N}\left(E[Y_i(1)|G_i=g] - E[Y_i(0)|G_i=g]\right)\\
+&= \sum_{g=1}^{G}\frac{N_g}{N}E[Y_i(1) - Y_i(0)|G_i=g]\\
+&= \sum_{g=1}^{G}E[Y_i(1) - Y_i(0)|G_i=g]Pr(G_i=g)\\
+&= E[E[Y_i(1) - Y_i(0)|G_i=g]]&&\text{(law of iterative expectations)}\\
+&= E[Y_i(1) - Y_i(0)] \\
+&= \tau
+\end{align*}
+
+Therefore, $\hat{\tau}$ is unbiased.
+
+## Part c
+
+Show that $E[\hat{\tau}_w] = \tau$
+
+\begin{align*}
+E[\hat{\tau}_w] & = E[\frac{1}{N} \sum_{i=1}^{N} \left(\frac{D_i Y_i}{w(G_i)} - \frac{(1-D_i)Y_i}{1-w(G_i)}\right)] \\
+& = \frac{1}{N} \sum_{i=1}^{N} \left(E[\frac{D_i Y_i}{w(G_i)}] - E[\frac{(1-D_i)Y_i}{1-w(G_i)}]\right)
+\end{align*}
+
+By the law of iterative expectations:
+
+\begin{align*}
+& = \frac{1}{N} \sum_{i=1}^{N} \left(E[E[\frac{D_i Y_i}{w(G_i)}|D_i =1, G_i=g] - E[E[\frac{(1-D_i)Y_i}{1-w(G_i)}|D_i=0, G_i=g]]\right)\\
+& = \frac{1}{N} \sum_{i=1}^{N} \left(E[E[Y_i|D_i =1, G_i=g]\frac{D_i}{w(G_i)}|G_i=g] - E[E[Y_i|D_i=0, G_i=g]\frac{(1-D_i)}{1-w(G_i)}|G_i=g]\right)\\
+& = \frac{1}{N} \sum_{i=1}^{N} \left(E[Y_i|D_i =1, G_i=g]E[\frac{D_i}{w(G_i)}|G_i=g] - E[Y_i|D_i=0, G_i=g]E[\frac{(1-D_i)}{1-w(G_i)}|G_i=g]\right)\\
+& = \frac{1}{N} \sum_{i=1}^{N} \left(\frac{1}{w(G_i)}E[Y_i|D_i =1, G_i=g]E[D_i|G_i=g] - \frac{1}{1-w(G_i)}E[(1-D_i)Y_i|D_i=0, G_i=g]E[(1-D_i)|G_i=g]\right)\\
+& = \frac{1}{N} \sum_{i=1}^{N} \left(\frac{1}{w(G_i)}E[Y_i|D_i =1, G_i=g]E[D_i|G_i=g] - \frac{1}{1-w(G_i)}E[Y_i|D_i=0, G_i=g](1-E[D_i|G_i=g])\right)\\
+& = \frac{1}{N} \sum_{i=1}^{N} \frac{1}{Pr(D_i=1|G_i)}E[Y_i|D_i =1, G_i=g]Pr(D_i=1|G_i)Pr(G_i=g) \\
+&- \frac{1}{1-Pr(D_i=1|G_i)}E[Y_i|D_i=0, G_i=g](1-Pr(D_i=1|G_i))Pr(G_i=g)\\
+& = \frac{1}{N} \sum_{i=1}^{N} \left(E[Y_i|D_i =1, G_i=g] - E[Y_i|D_i=0, G_i=g]\right)Pr(G_i=g)
+\end{align*}
+\begin{align*}
+& = \frac{1}{N} \sum_{i=1}^{N} \left(E[Y_i(1)|D_i =1, G_i=g] - E[Y_i(0)|D_i=0, G_i=g]\right)Pr(G_i=g) &&\text{(by consistency)} \\
+& = \frac{1}{N} \sum_{i=1}^{N} \left(E[Y_i(1)] - E[Y_i(0)]\right) &&\text{(by conditional ignorability)} \\
+& = \tau
+\end{align*}
+
+Therefore, $\hat{\tau}_w$ is unbiased.
+
+# Problem 2
+## Part a
+
+Of the variables, M and Y are colliders, and A, X, and Z are non-colliders. This is because M and Y have multiple incoming arrows pointing to them, while A, X, and Z have at most one incoming arrow.
+
+## Part b
+
+To estimate the effect of A on Y, you should condition on X. This is because there is a backdoor path from A to Y that includes X (A $\leftarrow$ X $\rightarrow$ Y). On this path, X is not a collider. Therefore, you must condition on X to block this backdoor path and estimate the effect of A on Y.
+
+To estimate the effect of A on Y, you should not condition on Z. This is because Z is not on any backdoor paths between A and Y. Rather, it is on a causal path (A $\rightarrow$ Z $\rightarrow$ Y). Therefore, if we were to condition on Z and block this path, we would not capture the indirect effect of A on Y through Z.
+
+## Part c
+
+When estimating the effect of M on Y, the backdoor paths are:
+
+1) M $\leftarrow$ Z $\rightarrow$ Y
+
+2) M $\leftarrow$ A $\leftarrow$ X $\rightarrow$ Y
+
+3) M $\leftarrow$ A $\rightarrow$ Z $\rightarrow$ Y
+
+To close the first path, we should condition on Z since it is not a collider.
+
+To close the second path, we could condition on either A or X since neither are colliders.
+
+To close the third path, we could condition on either A or Z since neither are colliders.
+
+# Problem 3
+
+```{r echo=TRUE}
+
+# loading the data set
+gotv <- read_excel("/Users/simonerittenhouse/Desktop/gotv_individual.xlsx")
+
+```
+
+## Part a. Data preparation
+
+1.
+```{r echo=TRUE}
+
+gotv <- gotv %>% mutate(num_voted = g2000 + p2000 + g2002 + p2002 + p2004)
+
+```
+
+2.
+
+```{r echo=TRUE}
+
+# adding id column
+gotv <- gotv %>% mutate(id = row_number())
+
+gotvNeighbor <- gotv %>% select(id, hh_id, hh_size, num_voted, voted, treatment) %>% filter(
+  treatment == "Neighbors" | treatment == "Control")
+
+```
+
+3.
+
+```{r echo=TRUE}
+
+# grouping by household and preserving treatment
+gotvNeighbor_hh <- gotvNeighbor %>% group_by(hh_id, treatment)
+
+# getting the means of all numeric variables
+gotvNeighbor_hh <- gotvNeighbor_hh %>% summarise_if(is.numeric, mean) 
+
+# rounding up the mean of num_voted
+gotvNeighbor_hh$num_voted <- ceiling(gotvNeighbor_hh$num_voted)
+
+```
+
+4.
+```{r echo=TRUE}
+
+stratum_sizes <- gotvNeighbor_hh %>% group_by(num_voted) %>% summarize(Ng = n(), 
+                Treatment = length(unique(hh_id[treatment == "Neighbors"])), 
+                Control = length(unique(hh_id[treatment == "Control"])), 
+                .groups="keep")
+
+stratum_sizes
+
+```
+In all strata, there are many more control units than treated units. Additionally, certain strata have many more units in them than others. For example, there are only 88 units who never voted, while there are 54,589 units who have voted 3 times previously.
+
+## Part b. CATE for subgroups
+
+1.
+
+```{r echo=TRUE}
+
+stratum_results <- gotvNeighbor_hh %>% group_by(num_voted) %>% summarize(Ng = n(),
+                                                                  .groups="keep")
+
+# Difference-in-means inside each stratum
+stratum_results$effect <- sapply(stratum_results$num_voted, function(x)  
+  mean(gotvNeighbor_hh$voted[gotvNeighbor_hh$treatment == "Neighbors"&
+                             gotvNeighbor_hh$num_voted == x]) -
+  mean(gotvNeighbor_hh$voted[gotvNeighbor_hh$treatment == "Control"&
+                             gotvNeighbor_hh$num_voted == x]))
+
+# Variance inside each stratum
+stratum_results$var <- sapply(stratum_results$num_voted, function(x)
+   var(gotvNeighbor_hh$voted[gotvNeighbor_hh$treatment == "Neighbors"&
+                             gotvNeighbor_hh$num_voted == x])/
+   sum(gotvNeighbor_hh$treatment == "Neighbors"&
+                             gotvNeighbor_hh$num_voted == x) +
+   var(gotvNeighbor_hh$voted[gotvNeighbor_hh$treatment == "Control"&
+                             gotvNeighbor_hh$num_voted == x])/
+   sum(gotvNeighbor_hh$treatment == "Control"&gotvNeighbor_hh$num_voted == x) )
+
+ans <- stratum_results %>% select(num_voted, effect, var)
+ans
+
+```
+
+2.
+
+```{r echo=TRUE}
+
+# confidence interval within each stratum
+
+stratum_results$ci_lower <- NA
+stratum_results$ci_upper <- NA
+
+for(i in 1:6){
+  stratum_results$ci_lower[i] <- stratum_results$effect[i] - 
+    qnorm(.975)*sqrt(stratum_results$var[i])
+  
+  stratum_results$ci_upper[i] <- stratum_results$effect[i] + 
+    qnorm(.975)*sqrt(stratum_results$var[i])
+}
+
+CI <- stratum_results %>% select(num_voted, ci_lower, ci_upper)
+CI
+
+```
+  
+3. The stratum that had never voted previously is the only group in which the confidence interval contains zero, meaning that the treatment had a significant effect within every stratum except for among those who had never previously voted. The largest treatment effect is for the stratum that had not voted previously (CATE = 0.1033). Because this stratum also had the smallest sample size, it also has the largest variance - which means it also has the largest standard error. Its large variance meant that it had a wider confidence interval, which would make it harder to find a significant effect. The stratum that had voted 4 times previously had the second largest CATE (0.1018) and a much lower variance. The lowest treatment effect was observed in the stratum that voted 5 times previously (0.0460). This suggests that households that had already voted in several prior elections were less influenced by hearing that their neighbors had voted.
+
+## Part c. Effect modification
+
+1.
+```{r echo=TRUE}
+
+# getting difference in ATE
+diff_ate <- stratum_results$effect[stratum_results$num_voted == 0] - 
+  stratum_results$effect[stratum_results$num_voted == 5]
+
+# finding variance
+var_diff <- stratum_results$var[stratum_results$num_voted == 0] +
+  stratum_results$var[stratum_results$num_voted == 5]
+
+# getting confidence interval
+ci_lower_diff <- diff_ate - qnorm(.975)*sqrt(var_diff)
+ci_upper_diff <- diff_ate + qnorm(.975)*sqrt(var_diff)
+
+print(tibble(
+  `Difference` = diff_ate,
+  `Variance` = var_diff,
+  `CI lower` = ci_lower_diff,
+  `CI upper` = ci_upper_diff
+))
+
+```
+Because the confidence interval around this estimate contains zero, we fail to reject the null hypothesis and conclude that there is not a significant difference between households who never voted previously and households who had voted 5 times previously.
+
+2. Every stratum's CATE (except for the stratum that had never previously voted) was statistically significant. However, the difference in effect between the two most extreme strata was found to not be statistically significant. This suggests that, in general, households that received the treatment were significantly more likely to vote in the upcoming election - regardless of how many prior elections they had voted in. The insignificant difference between the two most extreme groups also suggests that the number of elections households had voted in previously did not drastically affect the treatment's impact.
+
+## Part d. Sample sizes and significance effect (Bonus)
+
+Having more hypothesis/subgroups makes a significant effect in a particular group harder to detect because the subgroup's sample size will be smaller. This can cause our estimates to have a larger variance - which leads to a wider confidence interval. A wider confidence interval also means that it is more likely for 0 to fall within the interval, and we must fail to reject the null hypothesis when a null effect (in this case 0) falls within our estimated confidence interval.
+
+# Problem 4
+## Part a
+```{r echo=TRUE}
+
+# estimating difference-in-means ATE
+ate_hat <- mean(gotvNeighbor_hh$voted[gotvNeighbor_hh$treatment == "Neighbors"]) -
+  mean(gotvNeighbor_hh$voted[gotvNeighbor_hh$treatment == "Control"])
+
+# finding standard error of estimate
+var_hat <-  var(gotvNeighbor_hh$voted[gotvNeighbor_hh$treatment == "Neighbors"])/
+               sum(gotvNeighbor_hh$treatment == "Neighbors") +
+               var(gotvNeighbor_hh$voted[gotvNeighbor_hh$treatment == "Control"])/
+               sum(gotvNeighbor_hh$treatment == "Control")
+  
+SE <- sqrt(var_hat)
+
+# finding 95% confidence interval
+ci_lower <- ate_hat - qnorm(.975)*SE
+ci_upper <- ate_hat + qnorm(.975)*SE
+
+print(tibble(
+  `ATE` = ate_hat,
+  `Variance` = var_hat,
+  `SE` = SE,
+  `CI lower` = ci_lower,
+  `CI upper` = ci_upper
+))
+
+```
+## Part b
+```{r echo=TRUE}
+
+# finding weighted average of CATEs
+ate_hat_block <- sum(stratum_results$effect * (stratum_results$Ng/
+                                                 sum(stratum_results$Ng)))
+
+# stratified variance estimator
+var_hat_block <- sum(stratum_results$var * (stratum_results$Ng/
+                                              sum(stratum_results$Ng))^2)
+
+se_hat_block <- sqrt(var_hat_block)
+
+# finding a 95% confidence interval
+ci_95_block_lower = ate_hat_block - qnorm(.975)*sqrt(var_hat_block)
+ci_95_block_upper = ate_hat_block + qnorm(.975)*sqrt(var_hat_block)
+
+print(tibble(
+  `Stratified ATE` = ate_hat_block,
+  `Variance` = var_hat_block,
+  `SE` = se_hat_block,
+  `CI lower` = ci_95_block_lower,
+  `CI upper` = ci_95_block_upper
+))
+
+```
+The ATE computed using the stratification estimator found a larger effect (0.0850 > 0.0848) and a smaller variance (1.11e-05 < 1.16e-05). The smaller variance is likely because the number of times a household voted previously has an effect on whether or not a household will vote in the upcoming election. Because num_voted may therefore explain some of the variation in our outcome, we would expect the the variance within each stratum to be lower than the total sample's variance - which would cause our stratified estimate of the total variance to be lower. The stratified ATE estimate is different from the difference-in-means ATE estimate because within different strata, there may be different conditional treatment effects, which are then weighted differently in the estimation. Because the number of times a household had voted previously led to different conditional treatment effects, the estimate of total treatment effect for our stratified sample is different from the difference-in-means estimate.
+
+## Part c
+```{r echo=TRUE}
+
+set.seed(10003)
+
+# finding how many iterations are needed for treatment and control
+
+treatedN <- floor(length(gotvNeighbor_hh$voted[gotvNeighbor_hh$treatment 
+                                               == "Neighbors"]) / 6)
+controlN <- floor(length(gotvNeighbor_hh$voted[gotvNeighbor_hh$treatment 
+                                               == "Control"]) / 6)
+
+# getting indexes for treated and control groups
+
+treatedIndexes <- which(gotvNeighbor_hh$treatment == "Neighbors")
+controlIndexes <- which(gotvNeighbor_hh$treatment == "Control")
+
+# creating new group variable
+
+gotvNeighbor_hh$group <- NA
+
+# assigning group values randomly
+
+for(g in 0:5){
+  sampleTreated <- sample(treatedIndexes, treatedN, replace=FALSE)
+  sampleControl <- sample(controlIndexes, controlN, replace=FALSE)
+  
+  gotvNeighbor_hh$group[sampleTreated] <- g
+  gotvNeighbor_hh$group[sampleControl] <- g
+  
+  # removed assigned units so strata are mutually exclusive
+  treatedIndexes <- treatedIndexes[-which(treatedIndexes %in% sampleTreated)]
+  controlIndexes <- controlIndexes[-which(controlIndexes %in% sampleControl)]
+}
+
+# dropping NAs
+gotvNeighbor_new <- na.omit(gotvNeighbor_hh)
+
+# calculating CATEs and Variance per stratum
+
+CATEs <- rep(NA, 6)
+Vars <- rep(NA, 6)
+Ng <- treatedN + controlN
+
+for(s in 0:5){
+  
+  treatedStratum <- gotvNeighbor_new$voted[gotvNeighbor_new$treatment 
+                                           == "Neighbors" &
+                                           gotvNeighbor_new$group == s]
+  
+  controlStratum <- gotvNeighbor_new$voted[gotvNeighbor_new$treatment 
+                                           == "Control" &
+                                           gotvNeighbor_new$group == s]
+  
+  #Calculating CATE and variance
+  
+  CATEs[s+1] <- mean(treatedStratum) -  mean(controlStratum)
+  Vars[s+1] <- var(treatedStratum)/length(treatedStratum) +
+     var(controlStratum)/length(controlStratum)
+
+}
+
+# computing ATE
+ate_hat_block <- sum(CATEs * (Ng/(Ng*6)))
+
+# computing variance
+var_hat_block <- sum(Vars * (Ng/(Ng*6))^2)
+
+se_hat_block <- sqrt(var_hat_block)
+
+# computing confidence interval
+ci_95_block_lower = ate_hat_block - qnorm(.975)*sqrt(var_hat_block)
+ci_95_block_upper = ate_hat_block + qnorm(.975)*sqrt(var_hat_block)
+
+print(tibble(
+  `Stratified ATE` = ate_hat_block,
+  `Variance` = var_hat_block,
+  `SE` = se_hat_block,
+  `CI lower` = ci_95_block_lower,
+  `CI upper` = ci_95_block_upper
+))
+
+```
+The variance of this estimate is slightly larger than the variance found in part A (1.15704e-05 > 1.156835e-05). This is likely because the random strata that we have created here do not help predict the effect of our treatment (i.e. the stratification assignment is independent from our outcome). Therefore, our stratification variable "group" likely did not explain very much variation in our outcome, making the variance within each stratum larger than the total variance found in part A. Additionally, because we've subdivided our data, we would also expect the variance within each stratum to be higher because we've reduced the sample size. Therefore, because each stratum has a higher variance than the overall sample variance, our stratified variance estimate is likely to be higher as well.
