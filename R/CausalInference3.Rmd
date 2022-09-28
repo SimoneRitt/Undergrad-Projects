@@ -1,6 +1,6 @@
 ---
-title: "Homework 3"
-author: 'sgr344: Simone Rittenhouse'
+title: "Causal Inference 3"
+author: 'Simone Rittenhouse'
 date: "11/23/2021"
 output:
   pdf_document: default
