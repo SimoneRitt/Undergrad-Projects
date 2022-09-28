@@ -7,7 +7,6 @@ Created on Sat Feb  5 21:35:07 2022
 """
 
 # Introduction to Machine Learning
-# Homework Assignment 1
 # 2/16/2022
 
 # importing packages
