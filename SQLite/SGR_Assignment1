@@ -1,0 +1,801 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": [],
+      "collapsed_sections": []
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "source": [
+        "**Simone Rittenhouse**\n",
+        "\n",
+        "**Assignment 1**"
+      ],
+      "metadata": {
+        "id": "GVScZJzc0qud"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "\"Edinburgh_Buses.db\" has two tables:\n",
+        "\n",
+        "\"route\" containing:\n",
+        "\n",
+        "1.   the route number (\"num\")\n",
+        "2.   the bus company name (\"company\")\n",
+        "3.   the position of the stop given by \"stop\" along the route (\"pos\")\n",
+        "4.   the stop number (\"stop\")\n",
+        "\n",
+        "\"stops\" containing:\n",
+        "\n",
+        "1.   the stop number (\"id\")\n",
+        "2.   \"stop name\"\n",
+        "\n",
+        "Two companies can use the same route number, but those would be considered different routes.\n",
+        "\n"
+      ],
+      "metadata": {
+        "id": "4gJ0Nhug01e0"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# code executed in Google Colab\n",
+        "from google.colab import drive\n",
+        "drive.mount('/content/drive')"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "lYJiJffYBynJ",
+        "outputId": "6153239c-4f84-4e0f-a77a-ee689fb7fb63"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Mounted at /content/drive\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "-Kdp3YPU3uE7"
+      },
+      "outputs": [],
+      "source": [
+        "gdrivePath=\"/content/drive/MyDrive/\"\n",
+        "import sqlite3\n",
+        "import pandas as pd\n",
+        "# create a connection to a database\n",
+        "conn = sqlite3.connect(gdrivePath+\"Edinburgh_Buses.db\")"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "def execSQL(conn,query):\n",
+        "  conn.execute(query) # execute an SQL query\n",
+        "  conn.commit() # \"commit\" that query in order to make its action permanent"
+      ],
+      "metadata": {
+        "id": "sP7x2BuJ8UNr"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "def allrowsSelect(conn,query):\n",
+        "  cursor = conn.execute(query)\n",
+        "  for row in cursor:\n",
+        "   print(row)"
+      ],
+      "metadata": {
+        "id": "XguypGqJFIY1"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "1. Write a query to find all of the distinct bus companies."
+      ],
+      "metadata": {
+        "id": "hPzPiO8H0kPj"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "query = 'SELECT DISTINCT company FROM route'\n",
+        "\n",
+        "allrowsSelect(conn, query)"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "zeyqqFBQJvkJ",
+        "outputId": "bb5f4841-803f-4a82-aea5-fd24d1dbe28e"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "('LRT',)\n",
+            "('MAC',)\n",
+            "('SMT',)\n",
+            "('SMJ',)\n",
+            "('CCC',)\n",
+            "('MID',)\n",
+            "('LOW',)\n",
+            "('LRJ',)\n",
+            "('WIL',)\n",
+            "('FS',)\n",
+            "('FF',)\n",
+            "('JM',)\n",
+            "('ROU',)\n",
+            "('VL',)\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "2. Write a query that lists all of the distinct route number and company combinations."
+      ],
+      "metadata": {
+        "id": "Fvbe8l6d3ge4"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "query = 'SELECT DISTINCT num, company FROM route'\n",
+        "\n",
+        "allrowsSelect(conn, query)"
+      ],
+      "metadata": {
+        "id": "iy9HTmkpJwPt",
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "outputId": "5defe898-4fd2-496d-9bb8-8b8bc67eb45e"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "('1', 'LRT')\n",
+            "('10', 'LRT')\n",
+            "('100', 'LRT')\n",
+            "('100', 'MAC')\n",
+            "('106', 'SMT')\n",
+            "('11', 'LRT')\n",
+            "('113', 'SMT')\n",
+            "('12', 'LRT')\n",
+            "('124', 'SMT')\n",
+            "('129', 'SMT')\n",
+            "('13', 'LRT')\n",
+            "('134', 'SMT')\n",
+            "('137', 'SMT')\n",
+            "('14', 'LRT')\n",
+            "('142', 'SMJ')\n",
+            "('15', 'LRT')\n",
+            "('16', 'LRT')\n",
+            "('16', 'SMT')\n",
+            "('17', 'LRT')\n",
+            "('18', 'SMT')\n",
+            "('19', 'LRT')\n",
+            "('19', 'SMT')\n",
+            "('19A', 'LRT')\n",
+            "('2', 'LRT')\n",
+            "('20', 'LRT')\n",
+            "('21', 'LRT')\n",
+            "('22', 'LRT')\n",
+            "('22A', 'LRT')\n",
+            "('23', 'LRT')\n",
+            "('24', 'LRT')\n",
+            "('25', 'LRT')\n",
+            "('251', 'CCC')\n",
+            "('26', 'LRT')\n",
+            "('26A', 'LRT')\n",
+            "('27', 'LRT')\n",
+            "('27', 'MID')\n",
+            "('275', 'SMT')\n",
+            "('28', 'LRT')\n",
+            "('29', 'LOW')\n",
+            "('2A', 'LRT')\n",
+            "('3', 'LRT')\n",
+            "('30', 'LOW')\n",
+            "('30', 'LRT')\n",
+            "('31', 'LRT')\n",
+            "('315', 'LOW')\n",
+            "('32', 'LRT')\n",
+            "('33', 'LRT')\n",
+            "('34', 'LRT')\n",
+            "('35', 'LRT')\n",
+            "('36', 'LRT')\n",
+            "('37', 'LRT')\n",
+            "('37', 'SMT')\n",
+            "('38', 'LRT')\n",
+            "('38', 'MID')\n",
+            "('3A', 'LRJ')\n",
+            "('4', 'LRT')\n",
+            "('40', 'LRT')\n",
+            "('41', 'LRT')\n",
+            "('42', 'LRT')\n",
+            "('43', 'LRT')\n",
+            "('43', 'SMT')\n",
+            "('44', 'LRT')\n",
+            "('45', 'LRT')\n",
+            "('455', 'MID')\n",
+            "('46A', 'LRT')\n",
+            "('47', 'LRT')\n",
+            "('47', 'MID')\n",
+            "('48', 'WIL')\n",
+            "('49', 'SMT')\n",
+            "('5', 'LRT')\n",
+            "('51', 'LRT')\n",
+            "('52', 'LRT')\n",
+            "('53', 'FS')\n",
+            "('55', 'FS')\n",
+            "('55', 'LRT')\n",
+            "('56', 'FF')\n",
+            "('58', 'LRT')\n",
+            "('59', 'LRT')\n",
+            "('6', 'LRT')\n",
+            "('60', 'JM')\n",
+            "('61', 'LRT')\n",
+            "('61', 'SMT')\n",
+            "('62', 'LOW')\n",
+            "('63', 'LRT')\n",
+            "('64', 'SMT')\n",
+            "('64A', 'SMT')\n",
+            "('65', 'LRT')\n",
+            "('65', 'SMT')\n",
+            "('66', 'SMT')\n",
+            "('66A', 'SMT')\n",
+            "('69', 'LRT')\n",
+            "('7', 'LRT')\n",
+            "('74', 'SMT')\n",
+            "('75', 'LRT')\n",
+            "('77', 'SMT')\n",
+            "('79', 'SMT')\n",
+            "('7A', 'LRT')\n",
+            "('8', 'LRT')\n",
+            "('80', 'LRT')\n",
+            "('80', 'SMT')\n",
+            "('80A', 'LRT')\n",
+            "('80B', 'LRT')\n",
+            "('81', 'LRT')\n",
+            "('81A', 'LRT')\n",
+            "('82', 'LRT')\n",
+            "('84', 'LRT')\n",
+            "('85', 'LRT')\n",
+            "('85', 'SMT')\n",
+            "('86', 'LRT')\n",
+            "('86', 'SMT')\n",
+            "('86A', 'LRT')\n",
+            "('87', 'LRT')\n",
+            "('87', 'SMT')\n",
+            "('87A', 'LRT')\n",
+            "('9', 'LRT')\n",
+            "('93', 'SMT')\n",
+            "('94', 'LOW')\n",
+            "('95', 'LOW')\n",
+            "('A8', 'SMT')\n",
+            "('C12', 'SMT')\n",
+            "('C3', 'SMT')\n",
+            "('C33', 'SMT')\n",
+            "('C5', 'SMT')\n",
+            "('C55', 'SMT')\n",
+            "('C70', 'SMT')\n",
+            "('D25', 'SMT')\n",
+            "('D26', 'SMT')\n",
+            "('D27', 'SMT')\n",
+            "('D28', 'SMT')\n",
+            "('R1', 'ROU')\n",
+            "('R2', 'ROU')\n",
+            "('VL2', 'VL')\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "3. Find a query to find the route numbers that are used by more than one company, and the number of times that they are used."
+      ],
+      "metadata": {
+        "id": "90T9TaqV702n"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "query = '''\n",
+        "SELECT num, COUNT(DISTINCT company) as count\n",
+        "FROM route\n",
+        "GROUP BY num\n",
+        "HAVING count > 1\n",
+        "'''\n",
+        "\n",
+        "allrowsSelect(conn, query)"
+      ],
+      "metadata": {
+        "id": "c72_NsuAJwxW",
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "outputId": "ed81ae8e-6d64-4bbb-8f5c-5a0e99bbf787"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "('100', 2)\n",
+            "('16', 2)\n",
+            "('19', 2)\n",
+            "('27', 2)\n",
+            "('30', 2)\n",
+            "('37', 2)\n",
+            "('38', 2)\n",
+            "('43', 2)\n",
+            "('47', 2)\n",
+            "('55', 2)\n",
+            "('61', 2)\n",
+            "('65', 2)\n",
+            "('80', 2)\n",
+            "('85', 2)\n",
+            "('86', 2)\n",
+            "('87', 2)\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "4. Write a query to find the names of all of the stops on route 17 operated by company LRT, ordered by position. Output the position, stop number, and stop name."
+      ],
+      "metadata": {
+        "id": "invrvld6I6iI"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "query = '''\n",
+        "SELECT r.pos, r.stop, s.name\n",
+        "FROM route as r INNER JOIN stops as s ON r.stop = s.id\n",
+        "WHERE r.num == 17 AND r.company == 'LRT'\n",
+        "ORDER BY r.pos\n",
+        "'''\n",
+        "\n",
+        "allrowsSelect(conn, query)"
+      ],
+      "metadata": {
+        "id": "KMjw4VMIJxah",
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "outputId": "d289882b-f951-4794-b703-7aab9276c01a"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "(1, 167, 'Newhaven')\n",
+            "(2, 137, 'Leith')\n",
+            "(3, 141, 'Leith Walk')\n",
+            "(4, 194, 'Princes Street')\n",
+            "(5, 230, 'Tollcross')\n",
+            "(6, 160, 'Morningside')\n",
+            "(7, 179, 'Oxgangs')\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "5. Write a query that counts how many distinct routes each company has. It should output the company name and the number of routes."
+      ],
+      "metadata": {
+        "id": "64oFbWd23rDB"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "query = '''\n",
+        "SELECT company, COUNT(DISTINCT num) as routes\n",
+        "FROM route\n",
+        "GROUP BY company\n",
+        "'''\n",
+        "\n",
+        "allrowsSelect(conn, query)"
+      ],
+      "metadata": {
+        "id": "B_DCwJpDJx6O",
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "outputId": "537f73cb-73ad-463f-d6da-4ee3f6c4d3b8"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "('CCC', 1)\n",
+            "('FF', 1)\n",
+            "('FS', 2)\n",
+            "('JM', 1)\n",
+            "('LOW', 6)\n",
+            "('LRJ', 1)\n",
+            "('LRT', 72)\n",
+            "('MAC', 1)\n",
+            "('MID', 4)\n",
+            "('ROU', 2)\n",
+            "('SMJ', 1)\n",
+            "('SMT', 38)\n",
+            "('VL', 1)\n",
+            "('WIL', 1)\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "6. Write a query to find all of the distinct routes operated by company \"LOW\"."
+      ],
+      "metadata": {
+        "id": "pI3amGwO0yud"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "query = '''\n",
+        "SELECT DISTINCT num as routes\n",
+        "FROM route\n",
+        "WHERE company == 'LOW'\n",
+        "'''\n",
+        "\n",
+        "allrowsSelect(conn, query)"
+      ],
+      "metadata": {
+        "id": "kG8JI6O9JyZR",
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "outputId": "38a46ea5-a4e1-4dbb-bed3-dd21a4f354c8"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "('29',)\n",
+            "('30',)\n",
+            "('315',)\n",
+            "('62',)\n",
+            "('94',)\n",
+            "('95',)\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "7. Find the ten routes with the most stops. Remember that a route is identified by both its company and number."
+      ],
+      "metadata": {
+        "id": "F2iNQQVT9fq5"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "query = '''\n",
+        "SELECT num, company, COUNT(stop) as count\n",
+        "FROM route\n",
+        "GROUP BY num, company\n",
+        "ORDER BY count DESC\n",
+        "LIMIT 10\n",
+        "'''\n",
+        "\n",
+        "allrowsSelect(conn, query)"
+      ],
+      "metadata": {
+        "id": "CnMSHmOrJy2k",
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "outputId": "10f4f95a-f689-47d8-9136-7290533871a8"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "('32', 'LRT', 23)\n",
+            "('52', 'LRT', 23)\n",
+            "('12', 'LRT', 18)\n",
+            "('2A', 'LRT', 18)\n",
+            "('2', 'LRT', 17)\n",
+            "('34', 'LRT', 15)\n",
+            "('35', 'LRT', 15)\n",
+            "('66A', 'SMT', 13)\n",
+            "('81A', 'LRT', 13)\n",
+            "('14', 'LRT', 12)\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "8. Find the ten routes with the fewest stops."
+      ],
+      "metadata": {
+        "id": "Qm99-We2-gS3"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "query = '''\n",
+        "SELECT num, company, COUNT(stop) as count\n",
+        "FROM route\n",
+        "GROUP BY num, company\n",
+        "ORDER BY count\n",
+        "LIMIT 10\n",
+        "'''\n",
+        "\n",
+        "allrowsSelect(conn, query)"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "_dUWMjRD9zld",
+        "outputId": "9bfabc19-2e42-4890-9953-b9ea4d3b0543"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "('60', 'JM', 2)\n",
+            "('59', 'LRT', 3)\n",
+            "('100', 'LRT', 4)\n",
+            "('48', 'WIL', 4)\n",
+            "('55', 'LRT', 4)\n",
+            "('86A', 'LRT', 4)\n",
+            "('93', 'SMT', 4)\n",
+            "('VL2', 'VL', 4)\n",
+            "('49', 'SMT', 5)\n",
+            "('58', 'LRT', 5)\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "9. Do any routes have the same stop on them more than once? Write a query to check if they do, by creating a table containing the num, company, and stop columns for all of the stops that appear more than one, along with the number of times that they appear."
+      ],
+      "metadata": {
+        "id": "nLPCyRLXBplI"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# creating table (view)\n",
+        "query='''\n",
+        "CREATE VIEW same_stops AS\n",
+        "SELECT num, company, stop, COUNT(stop) as stop_count\n",
+        "FROM route\n",
+        "GROUP BY num, company, stop\n",
+        "HAVING stop_count > 1\n",
+        "'''\n",
+        "execSQL(conn,query)\n",
+        "\n",
+        "# querying new table (view)\n",
+        "query='''\n",
+        "SELECT * from same_stops\n",
+        "'''\n",
+        "allrowsSelect(conn, query)"
+      ],
+      "metadata": {
+        "id": "atZJv4VHJ0F2",
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "outputId": "c8489a79-de2d-4186-fdbc-762eef1aee74"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "('1', 'LRT', 137, 2)\n",
+            "('12', 'LRT', 31, 2)\n",
+            "('12', 'LRT', 115, 2)\n",
+            "('12', 'LRT', 173, 2)\n",
+            "('14', 'LRT', 215, 2)\n",
+            "('19', 'LRT', 28, 2)\n",
+            "('19A', 'LRT', 28, 2)\n",
+            "('2', 'LRT', 31, 2)\n",
+            "('2', 'LRT', 115, 2)\n",
+            "('2', 'LRT', 173, 2)\n",
+            "('275', 'SMT', 48, 2)\n",
+            "('275', 'SMT', 165, 2)\n",
+            "('2A', 'LRT', 31, 2)\n",
+            "('2A', 'LRT', 115, 2)\n",
+            "('2A', 'LRT', 173, 2)\n",
+            "('32', 'LRT', 173, 2)\n",
+            "('34', 'LRT', 92, 2)\n",
+            "('34', 'LRT', 213, 2)\n",
+            "('35', 'LRT', 92, 2)\n",
+            "('35', 'LRT', 213, 2)\n",
+            "('42', 'LRT', 36, 2)\n",
+            "('46A', 'LRT', 36, 2)\n",
+            "('52', 'LRT', 173, 2)\n",
+            "('6', 'LRT', 137, 2)\n",
+            "('81', 'LRT', 47, 2)\n",
+            "('81', 'LRT', 59, 2)\n",
+            "('81', 'LRT', 162, 2)\n",
+            "('81', 'LRT', 219, 2)\n",
+            "('81A', 'LRT', 47, 2)\n",
+            "('81A', 'LRT', 59, 2)\n",
+            "('81A', 'LRT', 162, 2)\n",
+            "('81A', 'LRT', 219, 2)\n",
+            "('R1', 'ROU', 106, 2)\n",
+            "('R2', 'ROU', 106, 2)\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "10. Find the numbers and names of the ten stops that are on the most routes, along with the number of routes they are on. Count a stop only once for each route it appears on. For instance, stop 137 appears both at the beginning (position 1) and the end (position 11) of route 1 of company LRT; stop 137 should be counted only once for this route."
+      ],
+      "metadata": {
+        "id": "bGjNNqAx-7S2"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "query = '''\n",
+        "SELECT stop, name, COUNT(stop) as stop_count\n",
+        "FROM (SELECT DISTINCT r.stop as stop, s.name as name, r.num, r.company \n",
+        "      FROM route as r INNER JOIN stops as s ON r.stop = s.id)\n",
+        "GROUP BY stop\n",
+        "ORDER BY stop_count DESC\n",
+        "LIMIT 10\n",
+        "'''\n",
+        "\n",
+        "allrowsSelect(conn, query)"
+      ],
+      "metadata": {
+        "id": "CNSook9MJ0iA",
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "outputId": "ab0e4ab3-3ba4-488f-c717-74dbfa094b21"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "(219, 'St Andrew Square', 47)\n",
+            "(115, 'Haymarket', 42)\n",
+            "(194, 'Princes Street', 38)\n",
+            "(29, 'Bridges', 36)\n",
+            "(48, 'Corstorphine', 27)\n",
+            "(149, 'London Road', 25)\n",
+            "(101, 'Gorgie', 20)\n",
+            "(137, 'Leith', 20)\n",
+            "(163, 'Musselburgh', 20)\n",
+            "(213, 'Sighthill', 20)\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "11. Find all of the routes that go from stop 219 to stop 115. The position of stop 219 on the route needs to be before that of 115."
+      ],
+      "metadata": {
+        "id": "ka79kYtfFDKP"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "query = '''\n",
+        "SELECT num, company \n",
+        "FROM (SELECT a.stop, b.stop, a.num as num, a.company as company\n",
+        "      FROM route as a INNER JOIN route as b ON a.num = b.num AND a.company = b.company\n",
+        "      WHERE a.stop == 219 AND b.stop == 115)\n",
+        "'''\n",
+        "\n",
+        "allrowsSelect(conn, query)"
+      ],
+      "metadata": {
+        "id": "puHjY9zGWxf4",
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "outputId": "951e688f-58f5-40d8-9cc1-4745a635e20c"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "('137', 'SMT')\n",
+            "('22', 'LRT')\n",
+            "('22A', 'LRT')\n",
+            "('25', 'LRT')\n",
+            "('37', 'SMT')\n",
+            "('38', 'MID')\n",
+            "('61', 'LRT')\n",
+            "('61', 'SMT')\n",
+            "('63', 'LRT')\n",
+            "('C12', 'SMT')\n"
+          ]
+        }
+      ]
+    }
+  ]
+}
