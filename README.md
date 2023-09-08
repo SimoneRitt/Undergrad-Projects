@@ -1,11 +1,11 @@
 Hi, I’m @SimoneRitt. Nice to meet you! 
 
 A few things about me:
+- I'm a first-year Data Science Master's student at NYU.
 - I have experience in Python, Java, R, and SQLite.
-- I’m interested in Data Science.
 - My current passion is Natural Language Processing, but I always try to keep an open mind when learning new techniques.
 
-You can reach me at sritt344@gmail.com
+You can reach me at sgr344@nyu.edu
 
 Thanks for stopping by!
 
